@@ -9,7 +9,7 @@ This project aims to experimentally verify the Strong Law of Large Numbers (SLLN
 ## Team Members
 - Sadenur Toker (Student ID: 2211021038)
 - Hilal Avcı (Student ID: 2211021043)
-- Ziltan Dilara Bilgili (Student ID: 2211021003)
+- Sultan Dilara Bilgili (Student ID: 2211021003)
 - Zeynep Seçgin (Student ID: 2211021021)
 
 ## Installation
