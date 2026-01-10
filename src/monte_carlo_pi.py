@@ -76,3 +76,16 @@ def estimate_pi_monte_carlo(
 if __name__ == "__main__":
     estimate_pi_monte_carlo(n=10000, seed=42)
 
+    # Ensure output directory exists and save the figure
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path)
+
+    print(f"Monte Carlo simulation complete. Figure saved to {save_path}")
+    plt.show()
+
+    return pi_estimates
+
+
+if __name__ == "__main__":
+    estimate_pi_monte_carlo(n=10000, seed=42)
+
