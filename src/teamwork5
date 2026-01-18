@@ -1,0 +1,130 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+import os
+
+# Create directories to save results
+if not os.path.exists("results"):
+    os.makedirs("results")
+
+# 1. PARAMETERS AND DISTRIBUTION FUNCTIONS
+# Setting the seed for reproducibility
+np.random.seed(42)
+
+def generate_data(dist_name, n):
+    """
+    Generates random samples for the specified distribution.
+    """
+    if dist_name == "Uniform":
+        # Uniform(0,1)
+        return np.random.uniform(0, 1, n)
+    elif dist_name == "Exponential":
+        # Exponential (lambda=1)
+        return np.random.exponential(scale=1.0, size=n)
+    elif dist_name == "Pareto_alpha_3":
+        # Pareto (alpha=3, xm=1)
+        return (np.random.pareto(a=3.0, size=n) + 1) * 1 
+    elif dist_name == "Pareto_alpha_1.5":
+        # Pareto (alpha=1.5, xm=1)
+        return (np.random.pareto(a=1.5, size=n) + 1) * 1
+    elif dist_name == "Cauchy":
+        # Standard Cauchy
+        return np.random.standard_cauchy(n)
+
+distributions = ["Uniform", "Exponential", "Pareto_alpha_3", "Pareto_alpha_1.5", "Cauchy"]
+
+# 2. SLLN ANALYSIS FUNCTION
+def analyze_slln(distributions):
+    n_slln = 10000  # Number of observations as per requirements
+    
+    # Create directory for SLLN results
+    save_path = "results/SLLN"
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    print("Generating SLLN Charts...")
+    for dist in distributions:
+        plt.figure(figsize=(10, 6))
+        data = generate_data(dist, n_slln)
+        
+        # Calculate Cumulative Mean
+        cumulative_means = np.cumsum(data) / np.arange(1, n_slln + 1)
+        
+        plt.plot(cumulative_means)
+        plt.title(f"{dist} - SLLN Analysis")
+        plt.xlabel("n (Observations)")
+        plt.ylabel("Cumulative Mean")
+        plt.grid(True)
+
+        # Limit y-axis for heavy-tailed distributions for better readability
+        if dist in ["Cauchy", "Pareto_alpha_1.5"]:
+            plt.ylim(-10, 10) 
+
+        # Save the figure
+        filename = f"{save_path}/{dist}_SLLN.png"
+        plt.savefig(filename)
+        plt.close() 
+        print(f"--> Saved: {filename}")
+
+# 3. CLT ANALYSIS FUNCTION
+def analyze_clt(distributions):
+    n_values = [2, 5, 10, 30, 50, 100] # Sample sizes
+    m_replications = 1000 # Number of replications
+
+    # Create directory for CLT results
+    save_path = "results/CLT"
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    print("Generating CLT Charts (This may take a moment)...")
+    for dist in distributions:
+        # Create a specific folder for each distribution
+        dist_path = f"{save_path}/{dist}"
+        if not os.path.exists(dist_path):
+            os.makedirs(dist_path)
+            
+        for n in n_values:
+            sample_means = []
+            for _ in range(m_replications):
+                sample = generate_data(dist, n)
+                sample_means.append(np.mean(sample))
+            
+            sample_means = np.array(sample_means)
+            
+            # Standardization (Z-score normalization)
+            std_dev = np.std(sample_means)
+            if std_dev == 0:
+                standardized_means = sample_means - np.mean(sample_means)
+            else:
+                standardized_means = (sample_means - np.mean(sample_means)) / std_dev
+
+            # Create Plot: Histogram and Q-Q Plot side by side
+            fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+            fig.suptitle(f"{dist} - CLT (n={n})")
+
+            # Histogram with Normal Curve Overlay
+            axes[0].hist(standardized_means, bins=30, density=True, alpha=0.6, color='b', label='Simulation')
+            axes[0].set_title("Histogram")
+            
+            # Theoretical Normal Distribution Curve
+            xmin, xmax = axes[0].get_xlim()
+            x = np.linspace(xmin, xmax, 100)
+            p = stats.norm.pdf(x, 0, 1)
+            axes[0].plot(x, p, 'k', linewidth=2, label='Normal PDF')
+            axes[0].legend()
+
+            # Q-Q Plot
+            stats.probplot(standardized_means, dist="norm", plot=axes[1])
+            axes[1].set_title("Q-Q Plot")
+
+            # Save the figure
+            filename = f"{dist_path}/{dist}_CLT_n{n}.png"
+            plt.savefig(filename)
+            plt.close()
+        print(f"--> Completed charts for {dist}.")
+
+# EXECUTE ANALYSIS
+if __name__ == "__main__":
+    analyze_slln(distributions)
+    analyze_clt(distributions)
+    print("\nALL PROCESSES COMPLETED! Please check the 'results' folder.")
